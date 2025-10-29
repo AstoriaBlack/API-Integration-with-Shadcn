@@ -1,31 +1,42 @@
 // DemoPage was previously used directly; routes now point to UsersTable and NewlyAddedUsersTable
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import NewlyAddedUsersTable from './pages/pageA/NewlyAddedUsersTable';
 import UsersTable from './pages/pageA/UsersTable';
 import { Button } from '@/components/ui/button';
-import { ArrowBigLeftDash, ArrowBigRightDash } from 'lucide-react';
-
+import { Database, UserPlus } from 'lucide-react';
 
 function App() {
+  const location = useLocation();
+
   return (
-    <div className="mx-10">
-      <h1 className="text-primary text-3xl">API Integration task</h1>
-      <br />
-      <nav className="my-4 flex gap-6">
-        <Button asChild variant="ghost" size="icon-lg">
-          <Link to="/" aria-label="Users">
-            <ArrowBigLeftDash className="size-custom border-2 rounded-lg border-[#D3D3D3]" size={46} color="#000000" absoluteStrokeWidth />
-          </Link>
-        </Button>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mb-8 mt-6">
+        <h1 className="mb-6 text-3xl font-bold text-gray-900">API Data Table</h1>
 
-        <Button asChild variant="ghost" size="icon-lg">
-          <Link to="/newly-added" aria-label="Newly Added ">
-            <ArrowBigRightDash className="size-custom border-2 rounded-lg border-[#D3D3D3]" size={46} color="#000000" absoluteStrokeWidth />
-          </Link>
-        </Button>
-      </nav>
+        <nav className="flex gap-2 border-b border-gray-200 pb-4">
+          <Button
+            asChild
+            variant={location.pathname === '/' ? 'default' : 'ghost'}
+            className="gap-2"
+          >
+            <Link to="/">
+              <Database className="h-4 w-4" />
+              API Users
+            </Link>
+          </Button>
 
-      <br />
+          <Button
+            asChild
+            variant={location.pathname === '/newly-added' ? 'default' : 'ghost'}
+            className="gap-2"
+          >
+            <Link to="/newly-added">
+              <UserPlus className="h-4 w-4" />
+              Newly Added Users
+            </Link>
+          </Button>
+        </nav>
+      </div>
 
       <Routes>
         <Route path="/" element={<UsersTable />} />

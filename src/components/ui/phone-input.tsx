@@ -34,7 +34,7 @@ const countryCodes = [
   { code: '+81', country: 'JP', flag: '🇯🇵' },
 ];
 
-export function PhoneInput({ value = '', onChange, placeholder = 'Enter phone number', className, name, schema, onValidation, error: propsError }: PhoneInputProps) {
+export function PhoneInput({ value = '', onChange, placeholder = 'Enter phone number', className, name, schema, onValidation }: PhoneInputProps) {
   const [countryCode, setCountryCode] = React.useState('+1');
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
@@ -114,7 +114,6 @@ export function PhoneInput({ value = '', onChange, placeholder = 'Enter phone nu
             onValidation?.(res.valid, 'message' in res ? res.message : undefined);
           }}
           placeholder={placeholder}
-          error={propsError ?? error}
         />
       </div>
       <input type="hidden" name={name} value={`${countryCode} ${phoneNumber}`.trim()} />

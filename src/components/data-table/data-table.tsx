@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import TableColumnsDropdown from './table-columns-dropdown';
 import RowsPerPageSelect from '@/components/customUi/rows-per-page-select';
 
@@ -29,8 +30,6 @@ import {
 } from '@/components/ui/table';
 import { DataTablePagination } from '../customUi/pagination';
 
-
-
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -46,9 +45,31 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [searchField, setSearchField] = React.useState<'firstName' | 'email' | 'id' | 'phone' | 'birthDate'>('email');
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const filteredData = React.useMemo(() => {
+    if (!searchQuery) return data;
+    const q = searchQuery.toLowerCase();
+    return data.filter((row: any) => {
+      if (searchField === 'email') return String(row.email ?? '').toLowerCase().includes(q);
+      if (searchField === 'firstName') {
+        const full = `${row.firstName ?? ''} ${row.lastName ?? ''}`.toLowerCase();
+        return (
+          full.includes(q) ||
+          (row.firstName ?? '').toLowerCase().includes(q) ||
+          (row.lastName ?? '').toLowerCase().includes(q)
+        );
+      }
+      if (searchField === 'id') return String(row.id ?? '').toLowerCase().includes(q);
+      if (searchField === 'phone') return String(row.phone ?? '').toLowerCase().includes(q);
+      if (searchField === 'birthDate') return String(row.birthDate ?? '').toLowerCase().includes(q);
+      return true;
+    });
+  }, [data, searchField, searchQuery]);
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -67,20 +88,28 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center py-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <Input
-          placeholder="Filter names..."
-          value={
-            (table.getColumn('firstName')?.getFilterValue() as string) ?? ''
-          }
-          onChange={(event) =>
-            table.getColumn('firstName')?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
+          placeholder={`Search by ${searchField === 'firstName' ? 'name' : searchField}...`}
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          className="max-w-xs"
         />
+        <Select value={searchField} onValueChange={(v) => setSearchField(v as any)}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="firstName">Name</SelectItem>
+            <SelectItem value="email">Email</SelectItem>
+            <SelectItem value="id">ID</SelectItem>
+            <SelectItem value="phone">Phone</SelectItem>
+            <SelectItem value="birthDate">Date of Birth</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <TableColumnsDropdown table={table} />
-        <div className="ml-2">
+        <div className="ml-auto flex items-center gap-2">
+          <TableColumnsDropdown table={table} />
           <UserForm
             open={addOpen}
             onOpenChange={setAddOpen}
@@ -101,10 +130,7 @@ export function DataTable<TData, TValue>({
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   );
                 })}
@@ -114,16 +140,10 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -148,7 +168,7 @@ export function DataTable<TData, TValue>({
           />
         </div>
         <div className="flex justify-end">
-<DataTablePagination table={table} />
+          <DataTablePagination table={table} />
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Eye, Edit, Trash2, Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
 
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { UserForm } from '@/components/form/add-post-form';
 import { usePostStore } from '@/store/postStore';
 import { UserDetailsDialog } from '@/components/form/user-details-dialog';
+import { DataTableColumnHeader } from './table-columns-dropdown';
 
 export const UserSchema = z.object({
   id: z.number().min(1, 'ID must be greater than 0'),
@@ -28,7 +29,6 @@ export const UserSchema = z.object({
     .email('Invalid email format')
     .refine(
       (email) => {
-        // More strict email validation
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         return emailRegex.test(email);
       },
@@ -36,7 +36,6 @@ export const UserSchema = z.object({
     )
     .refine(
       (email) => {
-        // Check for common email providers or allow any domain
         const domain = email.split('@')[1];
         return domain && domain.includes('.');
       },
@@ -47,7 +46,6 @@ export const UserSchema = z.object({
     .min(1, 'Phone number is required')
     .refine(
       (phone) => {
-        // Allow phone numbers with country codes (+1, +94, etc.) and various formats
         const phoneRegex = /^(\+\d{1,3}[- ]?)?\(?\d{1,4}\)?[- ]?\d{1,4}[- ]?\d{1,9}$/;
         return phoneRegex.test(phone.replace(/\s/g, ''));
       },
@@ -60,15 +58,45 @@ export const UserSchema = z.object({
       (date) => {
         const selectedDate = new Date(date);
         const today = new Date();
-        today.setHours(23, 59, 59, 999); // Set to end of today
+        today.setHours(23, 59, 59, 999);
         return selectedDate <= today;
       },
       { message: 'Birth date cannot be in the future' }
     ),
+  gender: z.string().optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleCopy}
+      className="ml-2 h-6 w-6 p-0"
+      title={copied ? 'Copied!' : 'Copy'}
+    >
+      {copied ? (
+        <Check className="h-3 w-3 text-green-600" />
+      ) : (
+        <Copy className="h-3 w-3" />
+      )}
+    </Button>
+  );
+}
 
 function ActionsCell({ user }: { user: User }) {
   const [showDialog, setShowDialog] = useState(false);
@@ -129,38 +157,163 @@ function ActionsCell({ user }: { user: User }) {
   );
 }
 
+function ViewOnlyActionsCell({ user }: { user: User }) {
+  const [showDialog, setShowDialog] = useState(false);
+
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowDialog(true)}
+          className="h-8 w-8 p-0"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <UserDetailsDialog
+        user={user}
+        open={showDialog}
+        onOpenChange={setShowDialog}
+      />
+    </>
+  );
+}
+
 export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'id',
-    header: 'ID',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="ID" />
+    ),
   },
   {
     accessorKey: 'firstName',
-    header: 'First Name',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="First Name" />
+    ),
   },
   {
     accessorKey: 'lastName',
-    header: 'Last Name',
-  },
-  {
-    accessorKey: 'email',
-    header: 'Email',
-  },
-  {
-    accessorKey: 'phone',
-    header: 'Phone',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Name" />
+    ),
   },
   {
     accessorKey: 'age',
-    header: 'Age',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Age" />
+    ),
+  },
+  {
+    accessorKey: 'gender',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Gender" />
+    ),
+  },
+  {
+    accessorKey: 'email',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Email" />
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span className="truncate max-w-[200px]">{row.getValue('email')}</span>
+        <CopyButton text={row.getValue('email')} />
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'phone',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Phone" />
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span>{row.getValue('phone')}</span>
+        <CopyButton text={row.getValue('phone')} />
+      </div>
+    ),
   },
   {
     accessorKey: 'birthDate',
-    header: 'Birth Date',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date of Birth" />
+    ),
   },
   {
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => <ActionsCell user={row.original} />,
+  },
+];
+
+export const apiColumns: ColumnDef<User>[] = [
+  {
+    accessorKey: 'id',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="ID" />
+    ),
+  },
+  {
+    accessorKey: 'firstName',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="First Name" />
+    ),
+  },
+  {
+    accessorKey: 'lastName',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Name" />
+    ),
+  },
+  {
+    accessorKey: 'age',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Age" />
+    ),
+  },
+  {
+    accessorKey: 'gender',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Gender" />
+    ),
+  },
+  {
+    accessorKey: 'email',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Email" />
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span className="truncate max-w-[200px]">{row.getValue('email')}</span>
+        <CopyButton text={row.getValue('email')} />
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'phone',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Phone" />
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center">
+        <span>{row.getValue('phone')}</span>
+        <CopyButton text={row.getValue('phone')} />
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'birthDate',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date of Birth" />
+    ),
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => <ViewOnlyActionsCell user={row.original} />,
   },
 ];

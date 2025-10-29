@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { BirthDateAgePicker } from '@/components/ui/birth-date-age-picker';
 import { UserSchema, User } from '@/components/data-table/columns';
-import { useCreateUser, useUpdateUser } from '@/hooks/useUserQueries';
 
 type Props = {
 	initialData?: User;
@@ -16,7 +15,7 @@ type Props = {
 	useReactQuery?: boolean; // Optional: enable React Query mutations
 };
 
-export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useReactQuery = false }: Props) {
+export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange }: Props) {
 	const [birthDate, setBirthDate] = React.useState<Date | undefined>(
 		initialData ? (initialData.birthDate ? new Date(initialData.birthDate) : undefined) : undefined
 	);
@@ -81,12 +80,12 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useRea
 						name="id"
 						type="number"
 						placeholder="Enter ID"
-						error={errors.id}
 						onChange={() => clearFieldError('id')}
 						defaultValue={initialData?.id}
 						disabled={isEdit}
 						className={isEdit ? 'bg-gray-50' : ''}
 					/>
+					{errors.id && <p className="mt-1 text-sm text-red-600">{errors.id}</p>}
 					
 				</div>
 
@@ -95,10 +94,10 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useRea
 					<Input
 						name="firstName"
 						placeholder="Enter First Name"
-						error={errors.firstName}
 						onChange={() => clearFieldError('firstName')}
 						defaultValue={initialData?.firstName}
 					/>
+					{errors.firstName && <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>}
 					
 				</div>
 
@@ -107,10 +106,10 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useRea
 					<Input
 						name="lastName"
 						placeholder="Enter Last Name"
-						error={errors.lastName}
 						onChange={() => clearFieldError('lastName')}
 						defaultValue={initialData?.lastName}
 					/>
+					{errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>}
 					
 				</div>
 
@@ -120,10 +119,10 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useRea
 						name="email"
 						type="email"
 						placeholder="Enter Email"
-						error={errors.email}
 						onChange={() => clearFieldError('email')}
 						defaultValue={initialData?.email}
 					/>
+					{errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
 					
 				</div>
 
@@ -136,8 +135,8 @@ export function CustomForm({ initialData, isEdit, onSubmit, onOpenChange, useRea
 							clearFieldError('phone');
 						}}
 						placeholder="Enter phone number"
-						error={errors.phone}
 					/>
+					{errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
 					
 				</div>
 

@@ -16,8 +16,7 @@ export default function NewlyAddedUsersTable({ data, onAddData }: Props) {
   };
 
   return (
-    <div>
-      <h2 className="mb-4 text-2xl font-bold">Newly Added Users</h2>
+    <div className="mb-8">
       <DataTable columns={columns} data={data ?? newPosts ?? []} onAddData={handleAdd} />
     </div>
   );
